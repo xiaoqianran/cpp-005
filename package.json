@@ -1,0 +1,29 @@
+{
+  "name": "cpp-005-comp-shader-anim",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "C++ PT：AOV 合成 · Shader 节点 · 相机动画",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0 --port 8080",
+    "build": "tsc --noEmit && vite build",
+    "build:wasm": "make -C cpp wasm",
+    "build:cli": "make -C cpp cli",
+    "preview": "vite preview --host 0.0.0.0 --port 8080",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "lucide-react": "^0.510.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.1.0",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "@vitejs/plugin-react": "^5.0.0",
+    "tailwindcss": "^4.1.0",
+    "typescript": "^5.7.0",
+    "vite": "^8.1.0"
+  }
+}
