@@ -1,26 +1,63 @@
 @import "tailwindcss";
 
-/* cpp-005 专属色：青紫后期感，区别于 002–004 中性灰 */
+/**
+ * Catppuccin Mocha — https://github.com/catppuccin/catppuccin
+ * cpp-005 专用：后期工具感，与 002–004 中性灰明确区分
+ */
 @theme {
-  --color-bg: #07060c;
-  --color-bg-elevated: #100e18;
-  --color-bg-subtle: #1a1626;
-  --color-fg: #f3f0ff;
-  --color-fg-muted: #b4a9d4;
-  --color-fg-subtle: #7a7199;
-  --color-border: #2a2440;
-  --color-border-strong: #4a3f6b;
-  --color-accent: #8b7cf6;
-  --color-accent-fg: #0c0a12;
-  --color-ok: #5eead4;
-  --color-warn: #fbbf24;
-  --color-comp: #22d3ee;
-  --color-shader: #c084fc;
-  --color-anim: #f472b6;
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-xl: 24px;
+  /* Surfaces */
+  --color-crust: #11111b;
+  --color-mantle: #181825;
+  --color-base: #1e1e2e;
+  --color-surface0: #313244;
+  --color-surface1: #45475a;
+  --color-surface2: #585b70;
+
+  /* Text */
+  --color-overlay0: #6c7086;
+  --color-overlay1: #7f849c;
+  --color-overlay2: #9399b2;
+  --color-subtext0: #a6adc8;
+  --color-subtext1: #bac2de;
+  --color-text: #cdd6f4;
+
+  /* Accents */
+  --color-lavender: #b4befe;
+  --color-blue: #89b4fa;
+  --color-sapphire: #74c7ec;
+  --color-sky: #89dceb;
+  --color-teal: #94e2d5;
+  --color-green: #a6e3a1;
+  --color-yellow: #f9e2af;
+  --color-peach: #fab387;
+  --color-maroon: #eba0ac;
+  --color-red: #f38ba8;
+  --color-mauve: #cba6f7;
+  --color-pink: #f5c2e7;
+  --color-flamingo: #f2cdcd;
+  --color-rosewater: #f5e0dc;
+
+  /* App aliases (components use these) */
+  --color-bg: var(--color-base);
+  --color-bg-elevated: var(--color-mantle);
+  --color-bg-subtle: var(--color-surface0);
+  --color-fg: var(--color-text);
+  --color-fg-muted: var(--color-subtext0);
+  --color-fg-subtle: var(--color-overlay1);
+  --color-border: color-mix(in srgb, var(--color-surface0) 80%, transparent);
+  --color-border-strong: var(--color-surface1);
+  --color-accent: var(--color-mauve);
+  --color-accent-fg: var(--color-crust);
+  --color-ok: var(--color-green);
+  --color-warn: var(--color-yellow);
+  --color-comp: var(--color-sky);
+  --color-shader: var(--color-mauve);
+  --color-anim: var(--color-pink);
+
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 18px;
+  --radius-xl: 22px;
   --font-sans: "Instrument Sans", system-ui, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, monospace;
 }
@@ -39,13 +76,19 @@
   body {
     margin: 0;
     background:
-      radial-gradient(1200px 600px at 10% -10%, rgba(139, 124, 246, 0.14), transparent 55%),
-      radial-gradient(900px 500px at 90% 0%, rgba(34, 211, 238, 0.08), transparent 50%),
-      var(--color-bg);
+      radial-gradient(900px 480px at 12% -8%, color-mix(in srgb, var(--color-mauve) 18%, transparent), transparent 55%),
+      radial-gradient(700px 400px at 92% 0%, color-mix(in srgb, var(--color-sky) 12%, transparent), transparent 50%),
+      radial-gradient(600px 360px at 50% 100%, color-mix(in srgb, var(--color-pink) 8%, transparent), transparent 45%),
+      var(--color-crust);
     color: var(--color-fg);
     font-family: var(--font-sans);
-    line-height: 1.5;
+    line-height: 1.55;
     -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection {
+    background: color-mix(in srgb, var(--color-mauve) 40%, transparent);
+    color: var(--color-text);
   }
 
   button:not(:disabled),
@@ -55,7 +98,89 @@
 
   button:disabled {
     cursor: not-allowed;
-    opacity: 0.5;
+    opacity: 0.45;
+  }
+
+  /* Catppuccin range / form controls */
+  input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 6px;
+    border-radius: 999px;
+    background: var(--color-surface0);
+    outline: none;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--color-mauve);
+    border: 2px solid var(--color-crust);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-mauve) 50%, transparent);
+    cursor: pointer;
+  }
+  input[type="checkbox"] {
+    accent-color: var(--color-mauve);
+    width: 1rem;
+    height: 1rem;
+  }
+  select {
+    background: var(--color-base);
+    color: var(--color-text);
+    border-color: var(--color-surface1);
+  }
+}
+
+@layer components {
+  .ctp-card {
+    border-radius: var(--radius-xl);
+    border: 1px solid color-mix(in srgb, var(--color-surface0) 90%, transparent);
+    background: color-mix(in srgb, var(--color-mantle) 92%, transparent);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 12px 40px rgba(17, 17, 27, 0.45);
+  }
+  .ctp-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    border-radius: 999px;
+    padding: 0.25rem 0.65rem;
+    font-size: 11px;
+    font-family: var(--font-mono);
+    font-weight: 500;
+  }
+  .ctp-btn {
+    display: inline-flex;
+    height: 2.5rem;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    border-radius: var(--radius-md);
+    padding: 0 1rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    transition: background 0.15s, border-color 0.15s, transform 0.1s;
+  }
+  .ctp-btn:active:not(:disabled) {
+    transform: scale(0.98);
+  }
+  .ctp-btn-primary {
+    background: var(--color-mauve);
+    color: var(--color-crust);
+  }
+  .ctp-btn-primary:hover:not(:disabled) {
+    background: var(--color-lavender);
+  }
+  .ctp-btn-ghost {
+    border: 1px solid var(--color-surface1);
+    background: transparent;
+    color: var(--color-subtext1);
+  }
+  .ctp-btn-ghost:hover:not(:disabled) {
+    border-color: var(--color-surface2);
+    color: var(--color-text);
+    background: var(--color-surface0);
   }
 }
 

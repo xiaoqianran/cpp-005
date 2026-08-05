@@ -26,17 +26,24 @@ export function AnimPanel({
   onExport,
 }: Props) {
   return (
-    <div className="space-y-3 rounded-[var(--radius-xl)] border border-border bg-bg-elevated p-4">
+    <div
+      className="ctp-card space-y-4 p-4 md:p-5"
+      style={{ borderTop: "3px solid var(--color-pink)" }}
+    >
       <div>
-        <h3 className="text-sm font-semibold">③ 相机动画</h3>
-        <p className="text-xs text-fg-subtle">cpp-005 主能力 C · 关键帧 · 导出序列</p>
+        <p className="font-mono text-[10px] font-semibold tracking-widest text-[var(--color-pink)]">
+          03 · ANIMATION
+        </p>
+        <h3 className="mt-1 text-base font-semibold">相机关键帧</h3>
+        <p className="mt-0.5 text-xs text-fg-muted">播放预览 · 记录关键帧 · 导出 PNG 序列</p>
       </div>
+
       <div className="flex flex-wrap gap-2">
         <button
           type="button"
           disabled={exporting}
           onClick={() => onPlay(!playing)}
-          className="h-9 rounded-[var(--radius-sm)] bg-accent px-3 text-xs font-semibold text-accent-fg disabled:opacity-50"
+          className="ctp-btn ctp-btn-primary"
         >
           {playing ? "暂停" : "播放"}
         </button>
@@ -44,15 +51,15 @@ export function AnimPanel({
           type="button"
           disabled={exporting}
           onClick={onCapture}
-          className="h-9 rounded-[var(--radius-sm)] border border-border px-3 text-xs"
+          className="ctp-btn ctp-btn-ghost"
         >
-          记录当前为关键帧
+          记录关键帧
         </button>
         <button
           type="button"
           disabled={exporting}
           onClick={onReset}
-          className="h-9 rounded-[var(--radius-sm)] border border-border px-3 text-xs"
+          className="ctp-btn ctp-btn-ghost"
         >
           默认轨迹
         </button>
@@ -60,18 +67,21 @@ export function AnimPanel({
           type="button"
           disabled={exporting}
           onClick={() => onExport(4)}
-          className="h-9 rounded-[var(--radius-sm)] border border-border px-3 text-xs"
-          title="约 4fps × 时长，每帧稍等采样后下载 PNG"
+          className="ctp-btn ctp-btn-ghost"
         >
-          {exporting ? "导出中…" : "导出序列 (4fps)"}
+          {exporting ? "导出中…" : "导出序列 4fps"}
         </button>
       </div>
+
       {exportProgress && (
-        <p className="font-mono text-[11px] text-accent">{exportProgress}</p>
+        <p className="font-mono text-[11px] text-[var(--color-pink)]">{exportProgress}</p>
       )}
-      <label className="block space-y-1">
-        <span className="text-[11px] text-fg-subtle">
-          时间 {time.toFixed(2)}s / {tl.duration.toFixed(1)}s · 关键帧 {tl.keys.length}
+
+      <label className="block space-y-2">
+        <span className="text-[11px] text-fg-muted">
+          时间{" "}
+          <span className="font-mono text-[var(--color-lavender)]">{time.toFixed(2)}s</span> /{" "}
+          {tl.duration.toFixed(1)}s · 关键帧 {tl.keys.length}
         </span>
         <input
           type="range"
@@ -84,7 +94,8 @@ export function AnimPanel({
           className="w-full"
         />
       </label>
-      <ul className="max-h-28 space-y-1 overflow-y-auto font-mono text-[10px] text-fg-muted">
+
+      <ul className="max-h-28 space-y-1 overflow-y-auto rounded-[var(--radius-md)] border border-border bg-crust/50 p-2 font-mono text-[10px] text-overlay1">
         {tl.keys.map((k, i) => (
           <li key={i}>
             t={k.t.toFixed(1)} yaw={k.yaw.toFixed(2)} pitch={k.pitch.toFixed(2)} r=
@@ -93,7 +104,7 @@ export function AnimPanel({
         ))}
       </ul>
       <p className="text-[10px] leading-relaxed text-fg-subtle">
-        提示：播放时姿态在变，累积会重置，噪声偏大正常。导出序列会逐帧等待采样再下载，浏览器可能拦截多文件——请允许下载。
+        播放时姿态变化会重置累积，噪声偏大正常。导出请允许浏览器多文件下载。
       </p>
     </div>
   );

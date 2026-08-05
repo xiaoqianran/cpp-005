@@ -38,16 +38,15 @@ export function Viewport({ canvasRef, cfg, snap, onOrbit, onReset }: Props) {
   };
 
   return (
-    <div
-      className="relative overflow-hidden rounded-[var(--radius-xl)] border border-border bg-bg-elevated"
-      style={{ boxShadow: "0 24px 60px rgba(0,0,0,0.35)" }}
-    >
+    <div className="ctp-card overflow-hidden">
       <div className="flex items-center justify-between border-b border-border px-4 py-3">
-        <div className="flex items-center gap-2 text-sm text-fg-muted">
-          <Sparkles className="size-4 text-fg-subtle" />
-          <span className="font-mono tabular-nums">
+        <div className="flex min-w-0 items-center gap-2 text-sm text-fg-muted">
+          <Sparkles className="size-4 shrink-0 text-[var(--color-lavender)]" />
+          <span className="truncate font-mono text-xs tabular-nums md:text-sm">
             {snap.status === "loading" && "加载 WASM…"}
-            {snap.status === "error" && "加载失败"}
+            {snap.status === "error" && (
+              <span className="text-[var(--color-red)]">加载失败</span>
+            )}
             {snap.status === "ready" &&
               statusLine(cfg, snap.samples, snap.passMs, snap.primCount)}
           </span>
@@ -56,16 +55,16 @@ export function Viewport({ canvasRef, cfg, snap, onOrbit, onReset }: Props) {
           type="button"
           disabled={snap.status !== "ready"}
           onClick={onReset}
-          className="inline-flex h-9 items-center gap-1.5 rounded-[var(--radius-sm)] border border-border px-3 text-xs font-medium text-fg-muted hover:text-fg"
+          className="ctp-btn ctp-btn-ghost h-9 px-3 text-xs"
         >
           <RotateCcw className="size-3.5" />
           清空累加
         </button>
       </div>
 
-      <div className="relative aspect-video w-full bg-black">
+      <div className="relative aspect-video w-full bg-[var(--color-crust)]">
         {snap.status === "error" ? (
-          <div className="absolute inset-0 flex items-center justify-center p-6 text-center text-sm text-fg-muted">
+          <div className="absolute inset-0 flex items-center justify-center p-6 text-center text-sm text-[var(--color-red)]">
             {snap.error}
           </div>
         ) : (
@@ -79,13 +78,13 @@ export function Viewport({ canvasRef, cfg, snap, onOrbit, onReset }: Props) {
           />
         )}
         {snap.status === "loading" && (
-          <div className="absolute inset-0 flex items-center justify-center bg-bg/80 text-sm text-fg-muted">
-            正在初始化 C++ 渲染器…
+          <div className="absolute inset-0 flex items-center justify-center bg-[color-mix(in_srgb,var(--color-base)_80%,transparent)] text-sm text-fg-muted">
+            正在初始化渲染器…
           </div>
         )}
       </div>
-      <p className="border-t border-border px-4 py-2 text-xs text-fg-subtle">
-        拖拽环绕。配置单一来源，改侧栏即同步引擎。
+      <p className="border-t border-border px-4 py-2.5 text-xs text-fg-subtle">
+        拖拽环绕预览 · 下方 AOV 条可点进合成
       </p>
     </div>
   );

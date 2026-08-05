@@ -5,9 +5,8 @@ import {
   Layers,
   Pause,
   Play,
-  Sparkles,
-  Workflow,
   MonitorPlay,
+  Workflow,
 } from "lucide-react";
 import { Curriculum } from "./components/Curriculum";
 import { CompositorPanel } from "./components/CompositorPanel";
@@ -32,16 +31,12 @@ import { AovStrip } from "./components/AovStrip";
 import { loadJson, saveJson, persistKeys } from "./lib/persist";
 import { presetNormalAov, presetDepthAov, presetFlat } from "./compositor/presets";
 
-/**
- * cpp-005 导航：三大主能力 + 两个次要
- * 主：合成 / Shader / 动画
- * 次：预览引擎（底层 PT）/ 课程
- */
 type Pillar = "comp" | "shader" | "anim";
 type View = Pillar | "engine" | "course";
 
 const PILLARS: {
   id: Pillar;
+  n: string;
   title: string;
   blurb: string;
   color: string;
@@ -49,23 +44,26 @@ const PILLARS: {
 }[] = [
   {
     id: "comp",
-    title: "① 合成 Compositor",
-    blurb: "AOV · 曝光辉光暗角 · 预设",
-    color: "var(--color-comp)",
+    n: "01",
+    title: "合成",
+    blurb: "AOV · 曝光 · 辉光 · 导出",
+    color: "var(--color-sky)",
     icon: Layers,
   },
   {
     id: "shader",
-    title: "② Shader 节点",
-    blurb: "颜色/贴图/法线/金属 → 主物体",
-    color: "var(--color-shader)",
+    n: "02",
+    title: "Shader",
+    blurb: "节点材质 → 主物体",
+    color: "var(--color-mauve)",
     icon: Workflow,
   },
   {
     id: "anim",
-    title: "③ 相机动画",
-    blurb: "关键帧 · 播放 · 导出 PNG 序列",
-    color: "var(--color-anim)",
+    n: "03",
+    title: "动画",
+    blurb: "关键帧 · 播放 · 序列",
+    color: "var(--color-pink)",
     icon: Clapperboard,
   },
 ];
@@ -73,21 +71,18 @@ const PILLARS: {
 export default function App() {
   const [cfg, setCfg] = useState<EngineConfig>(defaultConfig);
   const [running, setRunning] = useState(true);
-  /** 默认进「合成」——005 主菜，不是又一个光追 lab */
   const [view, setView] = useState<View>("comp");
 
   const [compGraph, setCompGraph] = useState<CompGraph>(() =>
     loadJson(persistKeys.K_COMP, defaultGraph()),
   );
   const [compOn, setCompOn] = useState(true);
-
   const [tl, setTl] = useState<Timeline>(() => loadJson(persistKeys.K_TL, defaultTimeline()));
   const [animT, setAnimT] = useState(0);
   const [animPlay, setAnimPlay] = useState(false);
   const animRef = useRef(0);
   const [exporting, setExporting] = useState(false);
   const [exportProgress, setExportProgress] = useState("");
-
   const [matGraph, setMatGraph] = useState<MatGraph>(() =>
     loadJson(persistKeys.K_MAT, defaultMatGraph()),
   );
@@ -95,10 +90,7 @@ export default function App() {
   const { canvasRef, snap, reset, applyMat, apiRef } = useEngine(
     cfg,
     running || animPlay || exporting,
-    {
-      compGraph,
-      compEnabled: compOn && view !== "course",
-    },
+    { compGraph, compEnabled: compOn && view !== "course" },
   );
 
   useEffect(() => saveJson(persistKeys.K_COMP, compGraph), [compGraph]);
@@ -118,8 +110,7 @@ export default function App() {
       last = now;
       setAnimT((t) => {
         const nt = t + dt;
-        const cam = sampleTimeline(tl, nt);
-        setCfg((c) => ({ ...c, ...cam }));
+        setCfg((c) => ({ ...c, ...sampleTimeline(tl, nt) }));
         return tl.loop ? nt % tl.duration : Math.min(nt, tl.duration);
       });
       animRef.current = requestAnimationFrame(tick);
@@ -187,10 +178,7 @@ export default function App() {
           capture: () =>
             new Promise((resolve) => {
               const c = canvasRef.current;
-              if (!c) {
-                resolve(null);
-                return;
-              }
+              if (!c) return resolve(null);
               c.toBlob((b) => resolve(b), "image/png");
             }),
         },
@@ -208,62 +196,70 @@ export default function App() {
   const showEngineSide = view === "engine";
 
   return (
-    <div className="min-h-dvh text-fg">
-      <div className="mx-auto flex max-w-[1440px] flex-col gap-4 px-4 py-4 md:gap-5 md:px-6 md:py-6">
-        {/* ── 身份条：一眼知道是 005 ── */}
-        <header className="space-y-4">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div className="space-y-2">
+    <div className="min-h-dvh">
+      <div className="mx-auto flex max-w-[1400px] flex-col gap-5 px-4 py-5 md:px-6 md:py-7">
+        {/* Identity */}
+        <header className="space-y-5">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div className="space-y-3">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="rounded-full bg-accent px-3 py-1 font-mono text-[11px] font-bold tracking-wider text-accent-fg">
+                <span className="ctp-chip bg-[var(--color-mauve)] text-[var(--color-crust)]">
                   cpp-005
                 </span>
-                <span className="rounded-full border border-border px-2.5 py-1 text-[11px] text-fg-muted">
-                  本期主题 · 后期三件套
+                <span className="ctp-chip border border-border bg-mantle text-[var(--color-subtext0)]">
+                  Catppuccin Mocha
+                </span>
+                <span className="ctp-chip border border-border text-[var(--color-sky)]">
+                  后期三件套
                 </span>
               </div>
-              <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">
-                合成 · Shader 节点 · 相机动画
+              <h1 className="text-3xl font-semibold tracking-tight text-fg md:text-[2rem]">
+                合成 · Shader · 动画
               </h1>
-              <p className="max-w-2xl text-sm text-fg-muted">
-                <strong className="text-fg">005 不讲「怎么追光线」</strong>
-                （那是 002–004）。这里只做三件事：画面后期合成、材质节点驱动、相机关键帧。
+              <p className="max-w-xl text-sm leading-relaxed text-fg-muted">
+                <span className="text-fg">005 只做后期与交互镜头。</span>
+                路径追踪积分在 002–004；本页三大主能力下方大卡片，光追引擎是次要入口。
               </p>
             </div>
             <button
               type="button"
               disabled={snap.status !== "ready" || exporting}
               onClick={() => setRunning((v) => !v)}
-              className="inline-flex h-11 shrink-0 items-center gap-2 rounded-[var(--radius-md)] bg-accent px-4 text-sm font-semibold text-accent-fg"
+              className="ctp-btn ctp-btn-primary shrink-0 shadow-[0_8px_24px_color-mix(in_srgb,var(--color-mauve)_35%,transparent)]"
             >
               {running ? <Pause className="size-4" /> : <Play className="size-4" />}
               {running ? "暂停渲染" : "继续渲染"}
             </button>
           </div>
 
-          {/* 系列位置 */}
-          <div className="flex flex-wrap gap-1.5 font-mono text-[10px]">
+          {/* Series breadcrumb */}
+          <nav
+            aria-label="系列进度"
+            className="flex flex-wrap items-center gap-1.5 font-mono text-[10px]"
+          >
             {[
-              { t: "002 积分", on: false },
-              { t: "003 资产", on: false },
-              { t: "004 环境/法线", on: false },
-              { t: "005 你在这里", on: true },
-            ].map((x) => (
-              <span
-                key={x.t}
-                className={`rounded-md px-2 py-1 ${
-                  x.on
-                    ? "bg-accent font-semibold text-accent-fg"
-                    : "border border-border text-fg-subtle"
-                }`}
-              >
-                {x.t}
+              { t: "002 积分", cur: false },
+              { t: "003 资产", cur: false },
+              { t: "004 环境", cur: false },
+              { t: "005 ← 当前", cur: true },
+            ].map((x, i) => (
+              <span key={x.t} className="flex items-center gap-1.5">
+                {i > 0 && <span className="text-fg-subtle">/</span>}
+                <span
+                  className={
+                    x.cur
+                      ? "rounded-md bg-[var(--color-mauve)] px-2 py-1 font-semibold text-[var(--color-crust)]"
+                      : "rounded-md border border-border px-2 py-1 text-fg-subtle"
+                  }
+                >
+                  {x.t}
+                </span>
               </span>
             ))}
-          </div>
+          </nav>
 
-          {/* 三大主能力 —— 最大按钮 */}
-          <div className="grid gap-2 sm:grid-cols-3">
+          {/* Three pillars */}
+          <div className="grid gap-3 sm:grid-cols-3">
             {PILLARS.map((p) => {
               const Icon = p.icon;
               const active = view === p.id;
@@ -272,50 +268,51 @@ export default function App() {
                   key={p.id}
                   type="button"
                   onClick={() => setView(p.id)}
-                  className={`rounded-[var(--radius-lg)] border p-4 text-left transition ${
+                  className={`group relative overflow-hidden rounded-[var(--radius-xl)] border p-4 text-left transition ${
                     active
-                      ? "border-transparent bg-bg-subtle shadow-[0_0_0_1px_var(--tw-shadow-color)]"
-                      : "border-border bg-bg-elevated/80 hover:border-border-strong"
+                      ? "border-transparent bg-mantle"
+                      : "border-border bg-mantle/60 hover:border-[var(--color-surface1)] hover:bg-mantle"
                   }`}
                   style={
                     active
-                      ? ({
-                          boxShadow: `0 0 0 2px ${p.color}`,
-                        } as React.CSSProperties)
+                      ? {
+                          boxShadow: `0 0 0 2px ${p.color}, 0 16px 40px color-mix(in srgb, ${p.color} 18%, transparent)`,
+                        }
                       : undefined
                   }
                 >
-                  <div className="mb-2 flex items-center gap-2">
+                  <div className="mb-3 flex items-center justify-between">
+                    <span
+                      className="font-mono text-[10px] font-semibold tracking-widest"
+                      style={{ color: p.color }}
+                    >
+                      {p.n}
+                    </span>
                     <Icon className="size-5" style={{ color: p.color }} />
-                    <span className="text-sm font-semibold">{p.title}</span>
                   </div>
-                  <p className="text-xs text-fg-muted">{p.blurb}</p>
+                  <div className="text-base font-semibold text-fg">{p.title}</div>
+                  <p className="mt-1 text-xs text-fg-muted">{p.blurb}</p>
                 </button>
               );
             })}
           </div>
 
-          {/* 次要：引擎 / 课程 */}
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
               onClick={() => setView("engine")}
-              className={`inline-flex h-9 items-center gap-1.5 rounded-full border px-3 text-xs ${
-                view === "engine"
-                  ? "border-border-strong bg-bg-subtle font-medium"
-                  : "border-border text-fg-muted"
+              className={`ctp-btn h-9 px-3 text-xs ${
+                view === "engine" ? "ctp-btn-primary" : "ctp-btn-ghost"
               }`}
             >
               <MonitorPlay className="size-3.5" />
-              底层预览引擎（002–004 光追）
+              底层光追引擎
             </button>
             <button
               type="button"
               onClick={() => setView("course")}
-              className={`inline-flex h-9 items-center gap-1.5 rounded-full border px-3 text-xs ${
-                view === "course"
-                  ? "border-border-strong bg-bg-subtle font-medium"
-                  : "border-border text-fg-muted"
+              className={`ctp-btn h-9 px-3 text-xs ${
+                view === "course" ? "ctp-btn-primary" : "ctp-btn-ghost"
               }`}
             >
               <GraduationCap className="size-3.5" />
@@ -330,28 +327,28 @@ export default function App() {
           </div>
         ) : (
           <>
-            {/* 当前模式条 */}
             {pillar && (
               <div
-                className="flex flex-wrap items-center gap-2 rounded-[var(--radius-md)] border border-border bg-bg-elevated px-3 py-2 text-xs"
-                style={{ borderLeftWidth: 4, borderLeftColor: pillar.color }}
+                className="flex flex-wrap items-center gap-2 rounded-[var(--radius-md)] border border-border bg-mantle/80 px-3 py-2.5 text-xs"
+                style={{ borderLeft: `4px solid ${pillar.color}` }}
               >
-                <Sparkles className="size-3.5" style={{ color: pillar.color }} />
-                <span className="font-semibold text-fg">当前：{pillar.title}</span>
-                <span className="text-fg-subtle">· {pillar.blurb}</span>
+                <span className="font-semibold text-fg">
+                  当前工作区 · {pillar.n} {pillar.title}
+                </span>
+                <span className="text-fg-subtle">{pillar.blurb}</span>
               </div>
             )}
             {view === "engine" && (
-              <div className="rounded-[var(--radius-md)] border border-border bg-bg-elevated px-3 py-2 text-xs text-fg-muted">
-                <strong className="text-fg">底层预览引擎</strong>
-                ——场景 / NEE / 分辨率等继承自 002–004，用来给上面三件套提供画面。
-                <strong className="text-fg"> 005 的新功能不在这里。</strong>
+              <div className="rounded-[var(--radius-md)] border border-[color-mix(in_srgb,var(--color-yellow)_35%,transparent)] bg-[color-mix(in_srgb,var(--color-yellow)_8%,var(--color-mantle))] px-3 py-2.5 text-xs text-fg-muted">
+                <strong className="text-[var(--color-yellow)]">次要面板：</strong>
+                场景 / NEE / 分辨率继承 002–004，只为给上面三件套供图。
+                <strong className="text-fg"> 005 新功能不在这里。</strong>
               </div>
             )}
 
             <div
               className={`grid gap-4 ${
-                showEngineSide ? "lg:grid-cols-[minmax(0,1fr)_320px]" : "lg:grid-cols-1"
+                showEngineSide ? "lg:grid-cols-[minmax(0,1fr)_300px]" : ""
               }`}
             >
               <section className="space-y-3">
@@ -377,8 +374,6 @@ export default function App() {
                     }}
                   />
                 )}
-
-                {/* 三大面板：只显示当前支柱 */}
                 {view === "comp" && (
                   <CompositorPanel
                     graph={compGraph}
@@ -405,8 +400,7 @@ export default function App() {
                     onPlay={setAnimPlay}
                     onSeek={(t) => {
                       setAnimT(t);
-                      const cam = sampleTimeline(tl, t);
-                      setCfg((c) => ({ ...c, ...cam }));
+                      setCfg((c) => ({ ...c, ...sampleTimeline(tl, t) }));
                     }}
                     onCapture={() => {
                       setTl((old) => ({
@@ -446,11 +440,12 @@ export default function App() {
           </>
         )}
 
-        <footer className="border-t border-border pt-3 text-[11px] text-fg-subtle">
+        <footer className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-4 text-[11px] text-fg-subtle">
           <p>
-            <span className="text-fg-muted">边界：</span>
-            005 = 后期/材质图/动画子集 · 不是完整 Blender · 光追积分在 002–004
+            主题 <span className="text-[var(--color-mauve)]">Catppuccin Mocha</span> · 005
+            后期三件套 · 非完整 Blender
           </p>
+          <p className="font-mono text-[10px] text-overlay0">github.com/xiaoqianran/cpp-005</p>
         </footer>
       </div>
     </div>

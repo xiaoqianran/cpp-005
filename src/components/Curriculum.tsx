@@ -71,10 +71,10 @@ export function Curriculum({
   };
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[var(--radius-xl)] border border-border bg-bg-elevated">
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[var(--radius-xl)] border border-border bg-mantle">
       <header className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-4 py-3 md:px-5">
         <div className="flex items-center gap-2">
-          <GraduationCap className="size-5 text-accent" />
+          <GraduationCap className="size-5 text-[var(--color-mauve)]" />
           <div>
             <h2 className="text-sm font-semibold tracking-tight md:text-base">
               cpp-005 课程 · 后期三件套
@@ -148,7 +148,7 @@ export function Curriculum({
                         }`}
                       >
                         {done[l.id] ? (
-                          <CheckCircle2 className="mt-0.5 size-3.5 shrink-0 text-accent" />
+                          <CheckCircle2 className="mt-0.5 size-3.5 shrink-0 text-[var(--color-mauve)]" />
                         ) : (
                           <span className="mt-0.5 size-3.5 shrink-0 rounded-full border border-border" />
                         )}
@@ -193,7 +193,7 @@ export function Curriculum({
                     onApply(lesson.action!);
                     onClose?.();
                   }}
-                  className="inline-flex h-11 items-center gap-2 rounded-[var(--radius-md)] bg-accent px-4 text-sm font-semibold text-accent-fg"
+                  className="inline-flex h-11 items-center gap-2 rounded-[var(--radius-md)] bg-accent px-4 text-sm font-semibold text-[var(--color-mauve)]-fg"
                 >
                   <FlaskConical className="size-4" />
                   {lesson.action.label}
