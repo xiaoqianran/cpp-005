@@ -83,6 +83,23 @@ export const CHAPTERS: Chapter[] = [
           },
         ],
       },
+      {
+        id: "ch01-preset",
+        title: "合成预设与导出",
+        minutes: 6,
+        summary: "电影感/强辉光/AOV 法线深度一键；导出 PNG。",
+        refs: [],
+        blocks: [
+          {
+            type: "ul",
+            items: [
+              "电影感：抬曝光 + 辉光 + 暗角",
+              "AOV 法线/深度：Input.aov 切换",
+              "导出 PNG：当前合成结果",
+            ],
+          },
+        ],
+      },
     ],
   },
   {
@@ -135,6 +152,10 @@ export const CHAPTERS: Chapter[] = [
             type: "callout",
             tone: "warn",
             text: "每帧会 reset 累积（姿态变），动画预览噪声大是正常的。",
+          },
+          {
+            type: "p",
+            text: "「导出序列」按 4fps 逐帧等待采样后下载 PNG；请允许浏览器多文件下载。",
           },
         ],
       },

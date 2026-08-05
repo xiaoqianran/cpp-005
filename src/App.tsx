@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   BookOpen,
   Clapperboard,
@@ -27,6 +27,7 @@ import { Viewport } from "./lab/Viewport";
 import type { LessonAction } from "./curriculum/types";
 import { defaultGraph, type CompGraph } from "./compositor/types";
 import { defaultTimeline, sampleTimeline, type Timeline } from "./animation/timeline";
+import { exportFrameSequence } from "./animation/exportFrames";
 import { defaultMatGraph, compileMatGraph, type MatGraph } from "./shadergraph/types";
 
 type View = "lab" | "comp" | "anim" | "shader" | "course";
@@ -44,17 +45,19 @@ export default function App() {
   const [animT, setAnimT] = useState(0);
   const [animPlay, setAnimPlay] = useState(false);
   const animRef = useRef(0);
+  const [exporting, setExporting] = useState(false);
+  const [exportProgress, setExportProgress] = useState("");
 
   const [matGraph, setMatGraph] = useState<MatGraph>(defaultMatGraph);
 
-  const { canvasRef, snap, reset, applyMat } = useEngine(cfg, running && !animPlay, {
+  // 动画播放时仍继续采样（原先 !animPlay 会冻屏）
+  const { canvasRef, snap, reset, applyMat } = useEngine(cfg, running || animPlay || exporting, {
     compGraph,
     compEnabled: compOn && view !== "course",
   });
 
-  // 动画时钟
   useEffect(() => {
-    if (!animPlay) {
+    if (!animPlay || exporting) {
       cancelAnimationFrame(animRef.current);
       return;
     }
@@ -77,9 +80,8 @@ export default function App() {
       alive = false;
       cancelAnimationFrame(animRef.current);
     };
-  }, [animPlay, tl]);
+  }, [animPlay, tl, exporting]);
 
-  // 动画播放时仍采样
   useEffect(() => {
     if (animPlay) setRunning(true);
   }, [animPlay]);
@@ -106,6 +108,53 @@ export default function App() {
     setView("lab");
   };
 
+  const exportPng = useCallback(() => {
+    const c = canvasRef.current;
+    if (!c) return;
+    c.toBlob((blob) => {
+      if (!blob) return;
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `cpp005_${Date.now()}.png`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }, "image/png");
+  }, [canvasRef]);
+
+  const exportSeq = async (fps: number) => {
+    setAnimPlay(false);
+    setExporting(true);
+    setExportProgress("准备…");
+    setRunning(true);
+    try {
+      const n = await exportFrameSequence(
+        tl,
+        fps,
+        450, // 每帧等待采样
+        {
+          setCam: (cam) => setCfg((c) => ({ ...c, ...cam })),
+          waitMs: (ms) => new Promise((r) => setTimeout(r, ms)),
+          capture: () =>
+            new Promise((resolve) => {
+              const c = canvasRef.current;
+              if (!c) {
+                resolve(null);
+                return;
+              }
+              c.toBlob((b) => resolve(b), "image/png");
+            }),
+        },
+        (i, total) => setExportProgress(`导出 ${i}/${total}`),
+      );
+      setExportProgress(`完成 ${n} 帧`);
+    } catch (e) {
+      setExportProgress(e instanceof Error ? e.message : "导出失败");
+    } finally {
+      setExporting(false);
+    }
+  };
+
   return (
     <div className="min-h-dvh bg-bg text-fg">
       <div className="mx-auto flex max-w-[1400px] flex-col gap-5 px-4 py-5 md:px-6 md:py-8">
@@ -118,8 +167,7 @@ export default function App() {
               合成 · Shader 节点 · 相机动画
             </h1>
             <p className="max-w-xl text-sm text-fg-muted md:text-base">
-              挑战 Blender 三件套的教学子集：AOV 合成图、简易材质图、关键帧摄影表。积分器继承
-              002–004。
+              Blender 三件套教学子集：AOV 合成预设、材质图驱动主球、关键帧导出 PNG 序列。
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -140,7 +188,7 @@ export default function App() {
             </button>
             <button
               type="button"
-              disabled={snap.status !== "ready"}
+              disabled={snap.status !== "ready" || exporting}
               onClick={() => setRunning((v) => !v)}
               className="inline-flex h-11 items-center gap-2 rounded-[var(--radius-md)] bg-accent px-4 text-sm font-semibold text-accent-fg"
             >
@@ -162,7 +210,7 @@ export default function App() {
                 cfg={cfg}
                 snap={snap}
                 onOrbit={(yaw, pitch) => {
-                  if (!animPlay) setCfg((c) => ({ ...c, yaw, pitch }));
+                  if (!animPlay && !exporting) setCfg((c) => ({ ...c, yaw, pitch }));
                 }}
                 onReset={reset}
               />
@@ -172,6 +220,7 @@ export default function App() {
                   onChange={setCompGraph}
                   enabled={compOn}
                   onEnabled={setCompOn}
+                  onExportPng={exportPng}
                 />
               )}
               {view === "shader" && (
@@ -182,6 +231,8 @@ export default function App() {
                   tl={tl}
                   time={animT}
                   playing={animPlay}
+                  exporting={exporting}
+                  exportProgress={exportProgress}
                   onPlay={setAnimPlay}
                   onSeek={(t) => {
                     setAnimT(t);
@@ -207,6 +258,7 @@ export default function App() {
                     setTl(defaultTimeline());
                     setAnimT(0);
                   }}
+                  onExport={exportSeq}
                 />
               )}
               {showLearn && view === "lab" && (
@@ -230,9 +282,8 @@ export default function App() {
           <div className="rounded-[var(--radius-xl)] border border-border bg-bg-elevated p-4 text-xs text-fg-muted">
             <p className="font-medium text-fg">系列 002→005</p>
             <p className="mt-1 leading-relaxed">
-              002 积分 · 003 资产 · 004 环境 NEE/法线 ·{" "}
-              <strong className="text-fg">005 合成 / Shader 节点 / 相机动画</strong>
-              。合成默认开；AOV 满帧更新法线与深度。
+              合成预设（电影感 / AOV）· Shader 编译主球 · 动画导出 PNG。Pages：
+              cpp-003/004/005 均已 Actions 部署。
             </p>
           </div>
         )}
