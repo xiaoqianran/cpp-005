@@ -27,7 +27,7 @@ export function ShaderGraphPanel({ graph, onChange, onApply }: Props) {
       <div>
         <h3 className="text-sm font-semibold">Shader Graph（教学子集）</h3>
         <p className="text-xs text-fg-subtle">
-          Color → Mix(Texture) → BSDF(+Normal/Metal) → Output · 写入场景 0 主球
+          编译后覆盖：场景0主球 · 场景1右侧立方 · 场景2蓝球（localStorage 自动保存）
         </p>
       </div>
       <div className="grid gap-2 sm:grid-cols-2">
@@ -111,7 +111,7 @@ export function ShaderGraphPanel({ graph, onChange, onApply }: Props) {
         onClick={onApply}
         className="h-9 rounded-[var(--radius-sm)] bg-accent px-3 text-xs font-semibold text-accent-fg"
       >
-        编译并应用到阳光沙地主球
+        编译并应用材质覆盖
       </button>
     </div>
   );

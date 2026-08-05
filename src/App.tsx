@@ -29,6 +29,9 @@ import { defaultGraph, type CompGraph } from "./compositor/types";
 import { defaultTimeline, sampleTimeline, type Timeline } from "./animation/timeline";
 import { exportFrameSequence } from "./animation/exportFrames";
 import { defaultMatGraph, compileMatGraph, type MatGraph } from "./shadergraph/types";
+import { AovStrip } from "./components/AovStrip";
+import { loadJson, saveJson, persistKeys } from "./lib/persist";
+import { presetNormalAov, presetDepthAov, presetFlat } from "./compositor/presets";
 
 type View = "lab" | "comp" | "anim" | "shader" | "course";
 
@@ -38,23 +41,34 @@ export default function App() {
   const [view, setView] = useState<View>("lab");
   const [showLearn, setShowLearn] = useState(true);
 
-  const [compGraph, setCompGraph] = useState<CompGraph>(defaultGraph);
+  const [compGraph, setCompGraph] = useState<CompGraph>(() =>
+    loadJson(persistKeys.K_COMP, defaultGraph()),
+  );
   const [compOn, setCompOn] = useState(true);
 
-  const [tl, setTl] = useState<Timeline>(defaultTimeline);
+  const [tl, setTl] = useState<Timeline>(() => loadJson(persistKeys.K_TL, defaultTimeline()));
   const [animT, setAnimT] = useState(0);
   const [animPlay, setAnimPlay] = useState(false);
   const animRef = useRef(0);
   const [exporting, setExporting] = useState(false);
   const [exportProgress, setExportProgress] = useState("");
 
-  const [matGraph, setMatGraph] = useState<MatGraph>(defaultMatGraph);
+  const [matGraph, setMatGraph] = useState<MatGraph>(() =>
+    loadJson(persistKeys.K_MAT, defaultMatGraph()),
+  );
 
-  // 动画播放时仍继续采样（原先 !animPlay 会冻屏）
-  const { canvasRef, snap, reset, applyMat } = useEngine(cfg, running || animPlay || exporting, {
-    compGraph,
-    compEnabled: compOn && view !== "course",
-  });
+  const { canvasRef, snap, reset, applyMat, apiRef } = useEngine(
+    cfg,
+    running || animPlay || exporting,
+    {
+      compGraph,
+      compEnabled: compOn && view !== "course",
+    },
+  );
+
+  useEffect(() => saveJson(persistKeys.K_COMP, compGraph), [compGraph]);
+  useEffect(() => saveJson(persistKeys.K_MAT, matGraph), [matGraph]);
+  useEffect(() => saveJson(persistKeys.K_TL, tl), [tl]);
 
   useEffect(() => {
     if (!animPlay || exporting) {
@@ -214,6 +228,19 @@ export default function App() {
                 }}
                 onReset={reset}
               />
+              {snap.status === "ready" && (
+                <AovStrip
+                  apiRef={apiRef}
+                  samples={snap.samples}
+                  onPick={(aov) => {
+                    setCompOn(true);
+                    if (aov === 0) setCompGraph(presetFlat());
+                    if (aov === 1) setCompGraph(presetNormalAov());
+                    if (aov === 2) setCompGraph(presetDepthAov());
+                    setView("comp");
+                  }}
+                />
+              )}
               {view === "comp" && (
                 <CompositorPanel
                   graph={compGraph}

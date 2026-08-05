@@ -16,7 +16,8 @@
 
 1. **Compositor**：Input/Exposure/Bloom/Mix/Gamma/Vignette/View + beauty/normal/depth AOV  
 2. **Shader Graph**：Color·Texture·Normal·Metal → `rt_set_mat_override` → 场景 0 主球  
-3. **Animation**：yaw/pitch/radius/vfov 关键帧 + 播放
+3. **Animation**：yaw/pitch/radius/vfov 关键帧 + 播放 + PNG 序列导出
+4. **AOV 缩略条** + localStorage 自动保存合成/材质/时间轴
 
 ## 明确边界
 

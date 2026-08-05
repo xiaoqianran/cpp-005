@@ -32,24 +32,9 @@ inline void build_scene(int scene_id, hittable_list &world,
     auto ground = make_shared<lambertian>(
         make_shared<checker_texture>(0.5, color(0.3, 0.28, 0.2), color(0.75, 0.7, 0.55)));
     world.add(make_shared<sphere>(point3(0, -1000, 0), 1000, ground));
-    {
-      auto &mo = mat_override();
-      shared_ptr<material> main_mat;
-      if (mo.enable) {
-        if (mo.metal)
-          main_mat = make_shared<metal>(mo.albedo, mo.fuzz);
-        else if (mo.use_nmap)
-          main_mat = make_shared<lambertian>(
-              mo.use_texture ? static_cast<shared_ptr<texture>>(image_texture::make_wood(64, 64))
-                             : static_cast<shared_ptr<texture>>(make_shared<solid_color>(mo.albedo)),
-              image_texture::make_normal_bricks(64, 64), 1.0, true);
-        else
-          main_mat = make_shared<lambertian>(mo.albedo);
-      } else {
-        main_mat = make_shared<lambertian>(color(0.7, 0.7, 0.75));
-      }
-      world.add(make_shared<sphere>(point3(0, 1.2, 0), 1.2, main_mat));
-    }
+    world.add(make_shared<sphere>(
+        point3(0, 1.2, 0), 1.2,
+        material_from_override(make_shared<lambertian>(color(0.7, 0.7, 0.75)))));
     world.add(make_shared<sphere>(point3(-2.5, 0.8, 1.5), 0.8, make_shared<metal>(color(0.9, 0.85, 0.7), 0.05)));
     world.add(make_shared<sphere>(point3(2.2, 0.7, 0.5), 0.7, make_shared<dielectric>(1.5)));
     make_box_mesh(make_shared<lambertian>(color(0.55, 0.5, 0.45)), point3(-0.5, 0.6, -1.8),
@@ -80,7 +65,8 @@ inline void build_scene(int scene_id, hittable_list &world,
 
     // 左立方：无 nmap · 右立方：有 nmap（同 albedo）
     auto mat_l = make_shared<lambertian>(plain_alb);
-    auto mat_r = make_shared<lambertian>(plain_alb, nmap, 1.15, true);
+    auto mat_r_default = make_shared<lambertian>(plain_alb, nmap, 1.15, true);
+    auto mat_r = material_from_override(mat_r_default);
     make_cube_mesh(mat_l, point3(-1.15, 0.55, 0.4), 1.0).append_to(world);
     make_cube_mesh(mat_r, point3(1.15, 0.55, 0.4), 1.0).append_to(world);
 
@@ -100,8 +86,9 @@ inline void build_scene(int scene_id, hittable_list &world,
     auto trophy = load_obj_string(k_builtin_trophy_obj(), gold, point3(0, 0, 0), 0.7, 0.0);
     world.add(instance_ry_t(mesh_as_hittable(trophy), 25, vec3(0, 0, 0.2)));
     world.add(make_shared<sphere>(point3(1.4, 0.55, 1.0), 0.55, make_shared<dielectric>(1.5)));
-    world.add(make_shared<sphere>(point3(-1.3, 0.45, 0.8), 0.45,
-                                  make_shared<lambertian>(color(0.2, 0.35, 0.6))));
+    world.add(make_shared<sphere>(
+        point3(-1.3, 0.45, 0.8), 0.45,
+        material_from_override(make_shared<lambertian>(color(0.2, 0.35, 0.6)))));
     // 挡光板：看太阳 NEE 投影在法线地面上
     make_box_mesh(make_shared<lambertian>(color(0.15, 0.15, 0.18)), point3(0.2, 1.4, -1.2),
                   vec3(1.2, 0.08, 0.08))
