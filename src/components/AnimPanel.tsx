@@ -28,8 +28,8 @@ export function AnimPanel({
   return (
     <div className="space-y-3 rounded-[var(--radius-xl)] border border-border bg-bg-elevated p-4">
       <div>
-        <h3 className="text-sm font-semibold">相机动画</h3>
-        <p className="text-xs text-fg-subtle">关键帧插值 · 播放预览 · 导出 PNG 序列</p>
+        <h3 className="text-sm font-semibold">③ 相机动画</h3>
+        <p className="text-xs text-fg-subtle">cpp-005 主能力 C · 关键帧 · 导出序列</p>
       </div>
       <div className="flex flex-wrap gap-2">
         <button

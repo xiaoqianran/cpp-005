@@ -25,7 +25,7 @@ export function ShaderGraphPanel({ graph, onChange, onApply }: Props) {
   return (
     <div className="space-y-3 rounded-[var(--radius-xl)] border border-border bg-bg-elevated p-4">
       <div>
-        <h3 className="text-sm font-semibold">Shader Graph（教学子集）</h3>
+        <h3 className="text-sm font-semibold">② Shader 节点（教学子集）</h3>
         <p className="text-xs text-fg-subtle">
           编译后覆盖：场景0主球 · 场景1右侧立方 · 场景2蓝球（localStorage 自动保存）
         </p>

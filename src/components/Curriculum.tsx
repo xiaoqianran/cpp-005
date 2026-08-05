@@ -77,10 +77,10 @@ export function Curriculum({
           <GraduationCap className="size-5 text-accent" />
           <div>
             <h2 className="text-sm font-semibold tracking-tight md:text-base">
-              完整课程 · 合成 · Shader · 动画精读
+              cpp-005 课程 · 后期三件套
             </h2>
             <p className="text-xs text-fg-subtle">
-              对照 GAMES101 · Shirley Next Week · PBRT · 进度 {doneCount}/{totalLessons}
+              合成 / Shader / 动画 · 进度 {doneCount}/{totalLessons}
             </p>
           </div>
         </div>

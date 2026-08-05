@@ -1,16 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  BookOpen,
   Clapperboard,
-  FlaskConical,
   GraduationCap,
   Layers,
   Pause,
   Play,
+  Sparkles,
   Workflow,
+  MonitorPlay,
 } from "lucide-react";
 import { Curriculum } from "./components/Curriculum";
-import { LearningPanel } from "./components/LearningPanel";
 import { CompositorPanel } from "./components/CompositorPanel";
 import { AnimPanel } from "./components/AnimPanel";
 import { ShaderGraphPanel } from "./components/ShaderGraphPanel";
@@ -33,13 +32,49 @@ import { AovStrip } from "./components/AovStrip";
 import { loadJson, saveJson, persistKeys } from "./lib/persist";
 import { presetNormalAov, presetDepthAov, presetFlat } from "./compositor/presets";
 
-type View = "lab" | "comp" | "anim" | "shader" | "course";
+/**
+ * cpp-005 导航：三大主能力 + 两个次要
+ * 主：合成 / Shader / 动画
+ * 次：预览引擎（底层 PT）/ 课程
+ */
+type Pillar = "comp" | "shader" | "anim";
+type View = Pillar | "engine" | "course";
+
+const PILLARS: {
+  id: Pillar;
+  title: string;
+  blurb: string;
+  color: string;
+  icon: typeof Layers;
+}[] = [
+  {
+    id: "comp",
+    title: "① 合成 Compositor",
+    blurb: "AOV · 曝光辉光暗角 · 预设",
+    color: "var(--color-comp)",
+    icon: Layers,
+  },
+  {
+    id: "shader",
+    title: "② Shader 节点",
+    blurb: "颜色/贴图/法线/金属 → 主物体",
+    color: "var(--color-shader)",
+    icon: Workflow,
+  },
+  {
+    id: "anim",
+    title: "③ 相机动画",
+    blurb: "关键帧 · 播放 · 导出 PNG 序列",
+    color: "var(--color-anim)",
+    icon: Clapperboard,
+  },
+];
 
 export default function App() {
   const [cfg, setCfg] = useState<EngineConfig>(defaultConfig);
   const [running, setRunning] = useState(true);
-  const [view, setView] = useState<View>("lab");
-  const [showLearn, setShowLearn] = useState(true);
+  /** 默认进「合成」——005 主菜，不是又一个光追 lab */
+  const [view, setView] = useState<View>("comp");
 
   const [compGraph, setCompGraph] = useState<CompGraph>(() =>
     loadJson(persistKeys.K_COMP, defaultGraph()),
@@ -103,7 +138,7 @@ export default function App() {
   const applyLesson = (a: LessonAction) => {
     setCfg((c) => applyPatch(c, lessonToPatch(a)));
     setRunning(true);
-    setView("lab");
+    setView("comp");
   };
 
   const applyShader = () => {
@@ -119,7 +154,7 @@ export default function App() {
       useNmap: m.useNormalMap,
       useTexture: m.useTexture,
     });
-    setView("lab");
+    setView("shader");
   };
 
   const exportPng = useCallback(() => {
@@ -145,7 +180,7 @@ export default function App() {
       const n = await exportFrameSequence(
         tl,
         fps,
-        450, // 每帧等待采样
+        450,
         {
           setCam: (cam) => setCfg((c) => ({ ...c, ...cam })),
           waitMs: (ms) => new Promise((r) => setTimeout(r, ms)),
@@ -169,177 +204,255 @@ export default function App() {
     }
   };
 
+  const pillar = PILLARS.find((p) => p.id === view);
+  const showEngineSide = view === "engine";
+
   return (
-    <div className="min-h-dvh bg-bg text-fg">
-      <div className="mx-auto flex max-w-[1400px] flex-col gap-5 px-4 py-5 md:px-6 md:py-8">
-        <header className="flex flex-col gap-4 border-b border-border pb-5 md:flex-row md:items-end md:justify-between">
-          <div className="space-y-2">
-            <p className="font-mono text-xs tracking-widest text-fg-subtle uppercase">
-              cpp-005 · compositor · shader · animation
-            </p>
-            <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">
-              合成 · Shader 节点 · 相机动画
-            </h1>
-            <p className="max-w-xl text-sm text-fg-muted md:text-base">
-              Blender 三件套教学子集：AOV 合成预设、材质图驱动主球、关键帧导出 PNG 序列。
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <div className="inline-flex h-11 flex-wrap items-center rounded-[var(--radius-md)] border border-border bg-bg-elevated p-1">
-              <Tab active={view === "lab"} onClick={() => setView("lab")} icon={<FlaskConical className="size-3.5" />} label="实验台" />
-              <Tab active={view === "comp"} onClick={() => setView("comp")} icon={<Layers className="size-3.5" />} label="合成" />
-              <Tab active={view === "shader"} onClick={() => setView("shader")} icon={<Workflow className="size-3.5" />} label="Shader" />
-              <Tab active={view === "anim"} onClick={() => setView("anim")} icon={<Clapperboard className="size-3.5" />} label="动画" />
-              <Tab active={view === "course"} onClick={() => setView("course")} icon={<GraduationCap className="size-3.5" />} label="课程" />
+    <div className="min-h-dvh text-fg">
+      <div className="mx-auto flex max-w-[1440px] flex-col gap-4 px-4 py-4 md:gap-5 md:px-6 md:py-6">
+        {/* ── 身份条：一眼知道是 005 ── */}
+        <header className="space-y-4">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="space-y-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="rounded-full bg-accent px-3 py-1 font-mono text-[11px] font-bold tracking-wider text-accent-fg">
+                  cpp-005
+                </span>
+                <span className="rounded-full border border-border px-2.5 py-1 text-[11px] text-fg-muted">
+                  本期主题 · 后期三件套
+                </span>
+              </div>
+              <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">
+                合成 · Shader 节点 · 相机动画
+              </h1>
+              <p className="max-w-2xl text-sm text-fg-muted">
+                <strong className="text-fg">005 不讲「怎么追光线」</strong>
+                （那是 002–004）。这里只做三件事：画面后期合成、材质节点驱动、相机关键帧。
+              </p>
             </div>
-            <button
-              type="button"
-              onClick={() => setShowLearn((v) => !v)}
-              className="inline-flex h-11 items-center gap-2 rounded-[var(--radius-md)] border border-border bg-bg-elevated px-4 text-sm font-medium"
-            >
-              <BookOpen className="size-4" />
-              {showLearn ? "隐藏摘要" : "摘要"}
-            </button>
             <button
               type="button"
               disabled={snap.status !== "ready" || exporting}
               onClick={() => setRunning((v) => !v)}
-              className="inline-flex h-11 items-center gap-2 rounded-[var(--radius-md)] bg-accent px-4 text-sm font-semibold text-accent-fg"
+              className="inline-flex h-11 shrink-0 items-center gap-2 rounded-[var(--radius-md)] bg-accent px-4 text-sm font-semibold text-accent-fg"
             >
               {running ? <Pause className="size-4" /> : <Play className="size-4" />}
-              {running ? "暂停" : "继续"}
+              {running ? "暂停渲染" : "继续渲染"}
+            </button>
+          </div>
+
+          {/* 系列位置 */}
+          <div className="flex flex-wrap gap-1.5 font-mono text-[10px]">
+            {[
+              { t: "002 积分", on: false },
+              { t: "003 资产", on: false },
+              { t: "004 环境/法线", on: false },
+              { t: "005 你在这里", on: true },
+            ].map((x) => (
+              <span
+                key={x.t}
+                className={`rounded-md px-2 py-1 ${
+                  x.on
+                    ? "bg-accent font-semibold text-accent-fg"
+                    : "border border-border text-fg-subtle"
+                }`}
+              >
+                {x.t}
+              </span>
+            ))}
+          </div>
+
+          {/* 三大主能力 —— 最大按钮 */}
+          <div className="grid gap-2 sm:grid-cols-3">
+            {PILLARS.map((p) => {
+              const Icon = p.icon;
+              const active = view === p.id;
+              return (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => setView(p.id)}
+                  className={`rounded-[var(--radius-lg)] border p-4 text-left transition ${
+                    active
+                      ? "border-transparent bg-bg-subtle shadow-[0_0_0_1px_var(--tw-shadow-color)]"
+                      : "border-border bg-bg-elevated/80 hover:border-border-strong"
+                  }`}
+                  style={
+                    active
+                      ? ({
+                          boxShadow: `0 0 0 2px ${p.color}`,
+                        } as React.CSSProperties)
+                      : undefined
+                  }
+                >
+                  <div className="mb-2 flex items-center gap-2">
+                    <Icon className="size-5" style={{ color: p.color }} />
+                    <span className="text-sm font-semibold">{p.title}</span>
+                  </div>
+                  <p className="text-xs text-fg-muted">{p.blurb}</p>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* 次要：引擎 / 课程 */}
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setView("engine")}
+              className={`inline-flex h-9 items-center gap-1.5 rounded-full border px-3 text-xs ${
+                view === "engine"
+                  ? "border-border-strong bg-bg-subtle font-medium"
+                  : "border-border text-fg-muted"
+              }`}
+            >
+              <MonitorPlay className="size-3.5" />
+              底层预览引擎（002–004 光追）
+            </button>
+            <button
+              type="button"
+              onClick={() => setView("course")}
+              className={`inline-flex h-9 items-center gap-1.5 rounded-full border px-3 text-xs ${
+                view === "course"
+                  ? "border-border-strong bg-bg-subtle font-medium"
+                  : "border-border text-fg-muted"
+              }`}
+            >
+              <GraduationCap className="size-3.5" />
+              005 课程
             </button>
           </div>
         </header>
 
         {view === "course" ? (
-          <div className="flex min-h-[70dvh] flex-col">
-            <Curriculum onApply={applyLesson} onClose={() => setView("lab")} />
+          <div className="flex min-h-[65dvh] flex-col">
+            <Curriculum onApply={applyLesson} onClose={() => setView("comp")} />
           </div>
         ) : (
-          <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_340px]">
-            <section className="space-y-3">
-              <Viewport
-                canvasRef={canvasRef}
-                cfg={cfg}
-                snap={snap}
-                onOrbit={(yaw, pitch) => {
-                  if (!animPlay && !exporting) setCfg((c) => ({ ...c, yaw, pitch }));
-                }}
-                onReset={reset}
-              />
-              {snap.status === "ready" && (
-                <AovStrip
-                  apiRef={apiRef}
-                  samples={snap.samples}
-                  onPick={(aov) => {
-                    setCompOn(true);
-                    if (aov === 0) setCompGraph(presetFlat());
-                    if (aov === 1) setCompGraph(presetNormalAov());
-                    if (aov === 2) setCompGraph(presetDepthAov());
-                    setView("comp");
+          <>
+            {/* 当前模式条 */}
+            {pillar && (
+              <div
+                className="flex flex-wrap items-center gap-2 rounded-[var(--radius-md)] border border-border bg-bg-elevated px-3 py-2 text-xs"
+                style={{ borderLeftWidth: 4, borderLeftColor: pillar.color }}
+              >
+                <Sparkles className="size-3.5" style={{ color: pillar.color }} />
+                <span className="font-semibold text-fg">当前：{pillar.title}</span>
+                <span className="text-fg-subtle">· {pillar.blurb}</span>
+              </div>
+            )}
+            {view === "engine" && (
+              <div className="rounded-[var(--radius-md)] border border-border bg-bg-elevated px-3 py-2 text-xs text-fg-muted">
+                <strong className="text-fg">底层预览引擎</strong>
+                ——场景 / NEE / 分辨率等继承自 002–004，用来给上面三件套提供画面。
+                <strong className="text-fg"> 005 的新功能不在这里。</strong>
+              </div>
+            )}
+
+            <div
+              className={`grid gap-4 ${
+                showEngineSide ? "lg:grid-cols-[minmax(0,1fr)_320px]" : "lg:grid-cols-1"
+              }`}
+            >
+              <section className="space-y-3">
+                <Viewport
+                  canvasRef={canvasRef}
+                  cfg={cfg}
+                  snap={snap}
+                  onOrbit={(yaw, pitch) => {
+                    if (!animPlay && !exporting) setCfg((c) => ({ ...c, yaw, pitch }));
                   }}
+                  onReset={reset}
+                />
+                {snap.status === "ready" && (
+                  <AovStrip
+                    apiRef={apiRef}
+                    samples={snap.samples}
+                    onPick={(aov) => {
+                      setCompOn(true);
+                      if (aov === 0) setCompGraph(presetFlat());
+                      if (aov === 1) setCompGraph(presetNormalAov());
+                      if (aov === 2) setCompGraph(presetDepthAov());
+                      setView("comp");
+                    }}
+                  />
+                )}
+
+                {/* 三大面板：只显示当前支柱 */}
+                {view === "comp" && (
+                  <CompositorPanel
+                    graph={compGraph}
+                    onChange={setCompGraph}
+                    enabled={compOn}
+                    onEnabled={setCompOn}
+                    onExportPng={exportPng}
+                  />
+                )}
+                {view === "shader" && (
+                  <ShaderGraphPanel
+                    graph={matGraph}
+                    onChange={setMatGraph}
+                    onApply={applyShader}
+                  />
+                )}
+                {view === "anim" && (
+                  <AnimPanel
+                    tl={tl}
+                    time={animT}
+                    playing={animPlay}
+                    exporting={exporting}
+                    exportProgress={exportProgress}
+                    onPlay={setAnimPlay}
+                    onSeek={(t) => {
+                      setAnimT(t);
+                      const cam = sampleTimeline(tl, t);
+                      setCfg((c) => ({ ...c, ...cam }));
+                    }}
+                    onCapture={() => {
+                      setTl((old) => ({
+                        ...old,
+                        keys: [
+                          ...old.keys,
+                          {
+                            t: animT,
+                            yaw: cfg.yaw,
+                            pitch: cfg.pitch,
+                            radius: cfg.radius,
+                            vfov: cfg.vfov,
+                          },
+                        ].sort((a, b) => a.t - b.t),
+                      }));
+                    }}
+                    onReset={() => {
+                      setTl(defaultTimeline());
+                      setAnimT(0);
+                    }}
+                    onExport={exportSeq}
+                  />
+                )}
+              </section>
+
+              {showEngineSide && (
+                <Controls
+                  cfg={cfg}
+                  setCfg={setCfg}
+                  lightCount={snap.lightCount}
+                  primCount={snap.primCount}
+                  showLearn={false}
+                  onOpenCourse={() => setView("course")}
                 />
               )}
-              {view === "comp" && (
-                <CompositorPanel
-                  graph={compGraph}
-                  onChange={setCompGraph}
-                  enabled={compOn}
-                  onEnabled={setCompOn}
-                  onExportPng={exportPng}
-                />
-              )}
-              {view === "shader" && (
-                <ShaderGraphPanel graph={matGraph} onChange={setMatGraph} onApply={applyShader} />
-              )}
-              {view === "anim" && (
-                <AnimPanel
-                  tl={tl}
-                  time={animT}
-                  playing={animPlay}
-                  exporting={exporting}
-                  exportProgress={exportProgress}
-                  onPlay={setAnimPlay}
-                  onSeek={(t) => {
-                    setAnimT(t);
-                    const cam = sampleTimeline(tl, t);
-                    setCfg((c) => ({ ...c, ...cam }));
-                  }}
-                  onCapture={() => {
-                    setTl((old) => ({
-                      ...old,
-                      keys: [
-                        ...old.keys,
-                        {
-                          t: animT,
-                          yaw: cfg.yaw,
-                          pitch: cfg.pitch,
-                          radius: cfg.radius,
-                          vfov: cfg.vfov,
-                        },
-                      ].sort((a, b) => a.t - b.t),
-                    }));
-                  }}
-                  onReset={() => {
-                    setTl(defaultTimeline());
-                    setAnimT(0);
-                  }}
-                  onExport={exportSeq}
-                />
-              )}
-              {showLearn && view === "lab" && (
-                <div className="lg:hidden">
-                  <LearningPanel onOpenCourse={() => setView("course")} />
-                </div>
-              )}
-            </section>
-            <Controls
-              cfg={cfg}
-              setCfg={setCfg}
-              lightCount={snap.lightCount}
-              primCount={snap.primCount}
-              showLearn={showLearn && view === "lab"}
-              onOpenCourse={() => setView("course")}
-            />
-          </div>
+            </div>
+          </>
         )}
 
-        {view !== "course" && (
-          <div className="rounded-[var(--radius-xl)] border border-border bg-bg-elevated p-4 text-xs text-fg-muted">
-            <p className="font-medium text-fg">系列 002→005</p>
-            <p className="mt-1 leading-relaxed">
-              合成预设（电影感 / AOV）· Shader 编译主球 · 动画导出 PNG。Pages：
-              cpp-003/004/005 均已 Actions 部署。
-            </p>
-          </div>
-        )}
+        <footer className="border-t border-border pt-3 text-[11px] text-fg-subtle">
+          <p>
+            <span className="text-fg-muted">边界：</span>
+            005 = 后期/材质图/动画子集 · 不是完整 Blender · 光追积分在 002–004
+          </p>
+        </footer>
       </div>
     </div>
-  );
-}
-
-function Tab({
-  active,
-  onClick,
-  icon,
-  label,
-}: {
-  active: boolean;
-  onClick: () => void;
-  icon: React.ReactNode;
-  label: string;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`inline-flex h-9 items-center gap-1.5 rounded-[var(--radius-sm)] px-2.5 text-xs font-medium transition ${
-        active ? "bg-bg-subtle text-fg" : "text-fg-muted"
-      }`}
-    >
-      {icon}
-      {label}
-    </button>
   );
 }

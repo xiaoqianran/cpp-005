@@ -51,8 +51,8 @@ export function CompositorPanel({ graph, onChange, enabled, onEnabled, onExportP
     <div className="space-y-3 rounded-[var(--radius-xl)] border border-border bg-bg-elevated p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h3 className="text-sm font-semibold">合成节点图</h3>
-          <p className="text-xs text-fg-subtle">类 Blender Compositor · 预设一键切换</p>
+          <h3 className="text-sm font-semibold">① 合成 · 节点图</h3>
+          <p className="text-xs text-fg-subtle">cpp-005 主能力 A · 类 Blender Compositor</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <label className="inline-flex items-center gap-2 text-xs">
